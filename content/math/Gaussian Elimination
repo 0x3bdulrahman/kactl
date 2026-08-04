@@ -1,0 +1,65 @@
+/**
+ * @brief Gaussian Elimination for Systems of Linear Equations
+ * @details Solves a system of N linear equations with M variables.
+ * The input matrix 'a' must be an augmented matrix of size N x (M + 1).
+ * WARNING: The matrix 'a' is passed by reference and will be modified (destroyed).
+ * 
+ * Time Complexity: $O(N \cdot M^2)$
+ * Space Complexity: $O(M)$ auxiliary space
+ * 
+ * @param a Augmented matrix of size N x (M + 1). Modified in-place.
+ * @param ans Vector to store the solutions.
+ * @return 1 if a unique solution exists.
+ * @return 0 if no solution exists (inconsistent system).
+ * @return INF if infinite solutions exist.
+ */
+
+using ld = long double;
+const ld EPS = 1e-9;
+const int INF = 2; // it doesn't actually have to be infinity or a big number
+// 1 uniqe sol
+// 0 no sol
+// INF INF sol
+//O(n^3)
+int gauss(vector<vector<ld>> &a, vector<ld> &ans) {
+    if (a.empty()) return 0; // Failsafe for empty matrix
+
+    int n = (int) a.size();
+    int m = (int) a[0].size() - 1;
+    vector<int> where(m, -1);
+    for (int col = 0, row = 0; col < m && row < n; ++col) {
+        int sel = row;
+        for (int i = row; i < n; ++i)
+            if (abs(a[i][col]) > abs(a[sel][col]))
+                sel = i;
+        if (abs(a[sel][col]) < EPS)
+            continue;
+        for (int i = col; i <= m; ++i)
+            swap(a[sel][i], a[row][i]);
+        where[col] = row;
+        for (int i = 0; i < n; ++i)
+            if (i != row) {
+                ld c = a[i][col] / a[row][col];
+                for (int j = col; j <= m; ++j)
+                    a[i][j] -= a[row][j] * c;
+            }
+        ++row;
+    }
+    // row is the rank of matrix if  you want the rank retrun row (you don't need to continue)
+    ans.assign(m, 0);
+    for (int i = 0; i < m; ++i)
+        if (where[i] != -1)
+            ans[i] = a[where[i]][m] / a[where[i]][i];
+    for (int i = 0; i < n; ++i) {
+        ld sum = 0;
+        for (int j = 0; j < m; ++j)
+            sum += ans[j] * a[i][j];
+        if (abs(sum - a[i][m]) > EPS)
+            return 0;  // Inconsistent system (0 solutions)
+    }
+    for (int i = 0; i < m; ++i)
+        if (where[i] == -1)
+            return INF; // Free variable detected (Infinite solutions)
+    return 1; // Unique solution
+}
+
